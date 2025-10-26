@@ -27,7 +27,6 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const validatedData = registerUserSchema.parse(req.body);
     const { fullName, email, password } = validatedData;
 
-    // Correct way to access single file uploaded via multer
     const avatarLocalPath = req.file?.path;
     console.log(req.file);
 
@@ -52,6 +51,8 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
       email,
       password,
       avatar: avatarUrl,
+      role: 'user',
+      status: 'active',
     });
 
     const { password: _, ...userWithoutPassword } = newUser.toObject();
@@ -120,6 +121,8 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
               fullName: user.fullName,
               email: user.email,
               avatar: user.avatar,
+              role: user.role,
+              status: user.status,
             },
             accessToken,
             refreshToken,
@@ -235,6 +238,52 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, req.user, 'User fetched successfully'));
 });
 
+const getAllUsers = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, search } = req.query;
+
+  interface UserQuery {
+    $or?: Array<{
+      name?: { $regex: string; $options: string };
+      email?: { $regex: string; $options: string };
+    }>;
+  }
+
+  const query: UserQuery = {};
+
+  if (search) {
+    const searchString = String(search);
+    query.$or = [
+      { name: { $regex: searchString, $options: 'i' } },
+      { email: { $regex: searchString, $options: 'i' } }
+    ];
+  }
+
+  const pageNum = parseInt(String(page));
+  const limitNum = parseInt(String(limit));
+  const skip = (pageNum - 1) * limitNum;
+
+  const users = await User.find(query)
+    .select('-password')
+    .limit(limitNum)
+    .skip(skip)
+    .sort({ createdAt: -1 });
+
+  const total = await User.countDocuments(query);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      users,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        totalUsers: total,
+        hasNext: pageNum * limitNum < total,
+        hasPrev: pageNum > 1
+      }
+    }, "Users retrieved successfully")
+  );
+});
+
 const updateAccountDetails = asyncHandler(async function (req, res) {
   const { fullName, email } = req.body;
 
@@ -281,6 +330,137 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, user, 'Avatar image updated successfully'));
 });
 
+
+
+const createUser = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { fullName, email, password } = req.body;
+
+    if (!fullName || !email || !password) {
+      throw new ApiError(400, 'All fields are required');
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new ApiError(400, 'User with this email already exists');
+    }
+
+    const newUser = await User.create({
+      fullName,
+      email,
+      password,
+      role: 'user',
+      status: 'active',
+      avatar: 'https://via.placeholder.com/150'
+    });
+
+    const userWithoutPassword = await User.findById(newUser._id).select('-password');
+
+    return res.status(201).json(
+      new ApiResponse(201, userWithoutPassword, 'User created successfully')
+    );
+  } catch (error: any) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        errors: error.errors || [],
+        data: null,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      data: null,
+    });
+  }
+});
+
+const updateUserById = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { fullName, email } = req.body;
+
+    if (!fullName || !email) {
+      throw new ApiError(400, 'All fields are required');
+    }
+
+    const existingUser = await User.findOne({
+      email,
+      _id: { $ne: userId }
+    });
+
+    if (existingUser) {
+      throw new ApiError(400, 'Email is already taken by another user');
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { fullName, email } },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      throw new ApiError(404, 'User not found');
+    }
+
+    return res.status(200).json(
+      new ApiResponse(200, user, 'User updated successfully')
+    );
+  } catch (error: any) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        errors: error.errors || [],
+        data: null,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      data: null,
+    });
+  }
+});
+
+const deleteUserById = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (req.user?._id.toString() === userId) {
+      throw new ApiError(400, 'You cannot delete your own account');
+    }
+
+    const user = await User.findByIdAndDelete(userId);
+
+    if (!user) {
+      throw new ApiError(404, 'User not found');
+    }
+
+    return res.status(200).json(
+      new ApiResponse(200, null, 'User deleted successfully')
+    );
+  } catch (error: any) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        errors: error.errors || [],
+        data: null,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      data: null,
+    });
+  }
+});
+
 export {
   registerUser,
   loginUser,
@@ -290,4 +470,8 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
+  getAllUsers,
+  createUser,
+  deleteUserById,
+  updateUserById
 };

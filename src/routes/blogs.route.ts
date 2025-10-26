@@ -1,15 +1,42 @@
 import { Router } from 'express';
-import { createBlog, deleteBlog, getAllBlogs, getBlogById } from '../controllers/blogs.controller';
+import {
+  createBlog,
+  deleteBlog,
+  getAllBlogs,
+  getBlogById,
+  updateBlog,
+  getBlogStats,
+  getBlogsByCategory
+} from '../controllers/blogs.controller';
 import { upload } from '../middlewares/multer.middleware';
-import { verifyJWT } from '../middlewares/auth.middleware';
+// import { verifyJWT } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.get('/', verifyJWT, getAllBlogs);
-router.get('/:id', verifyJWT, getBlogById);
-router.delete('/:id', verifyJWT, deleteBlog);
+// Public routes
+router.get(
+  '/',
+  getAllBlogs
+);
+
+router.get(
+  '/categories/:category',
+  getBlogsByCategory
+);
+
+// Protected routes (Authentication required)
+// router.use(verifyJWT);
+
+router.get(
+  '/:id',
+  getBlogById
+);
+
+// Admin only routes
+
 router.post(
-  '/create',
+  '/',
+  // verifyJWT,
   upload.fields([
     {
       name: 'image',
@@ -17,6 +44,30 @@ router.post(
     },
   ]),
   createBlog
+);
+
+router.put(
+  '/:id',
+  // verifyJWT,
+  upload.fields([
+    {
+      name: 'image',
+      maxCount: 1,
+    },
+  ]),
+  updateBlog
+);
+
+router.delete(
+  '/:id',
+  // verifyJWT,
+  deleteBlog
+);
+
+router.get(
+  '/stats/overview',
+  // verifyJWT,
+  getBlogStats
 );
 
 export default router;

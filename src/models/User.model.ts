@@ -7,6 +7,9 @@ export interface IUser extends Document {
   email: string;
   avatar: string;
   password: string;
+  role: string;
+  status: string;
+  joinDate: Date;
   refreshToken: string;
   generateAccessToken: () => string;
   generateRefreshToken: () => string;
@@ -36,6 +39,20 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
     },
+    role: {
+      type: String,
+      required: true
+    },
+    status: {
+      type: String,
+      required: true,
+      enum: ['active', 'inactive', 'suspended'],
+      default: 'active',
+    },
+    joinDate: {
+      type: Date,
+      default: Date.now
+    }
   },
   { timestamps: true }
 );
@@ -56,10 +73,11 @@ userSchema.methods.generateAccessToken = function () {
     _id: this._id,
     fullName: this.fullName,
     email: this.email,
+    role: "user",
   };
 
   const options: SignOptions = {
-    expiresIn: '15m',
+    expiresIn: '1d',
   };
 
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET!, options);

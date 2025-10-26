@@ -1,182 +1,180 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
-import blogSchema from '../models/blogs.model';
-import { createNewsSchema } from '../validations/news.validator';
 import { ApiResponse } from '../utils/ApiResponse';
 import { ApiError } from '../utils/ApiError';
 import { deleteFromCloudinary, uploadOnCloudinary } from '../utils/Cloudinary';
+import { blogService } from '../services/blog.service';
+import { createBlogSchema, blogQuerySchema, BlogQueryInput } from '../validations/news.validator';
+import blogSchema from '../models/blogs.model';
 
+/**
+ * @desc    Get all blogs with advanced filtering, search, and pagination
+ * @route   GET /api/blogs
+ * @access  Public
+ */
 const getAllBlogs = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const { page = 1, limit = 10, category, search } = req.query;
-    const query: any = {};
-    if (category) query.category = category;
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
-    }
+  // Validate and parse query parameters
+  const validatedQuery = blogQuerySchema.parse(req.query);
 
-    const pageNum = Number(page);
-    const pageSize = Number(limit);
+  // Get blogs with pagination
+  const result = await blogService.findBlogs(validatedQuery);
 
-    const [data, total] = await Promise.all([
-      blogSchema
-        .find(query)
-        .sort({ createdAt: -1 })
-        .skip((pageNum - 1) * pageSize)
-        .limit(pageSize),
-      blogSchema.countDocuments(query),
-    ]);
-
-    const response = {
-      success: true,
-      total,
-      page: pageNum,
-      totalPages: Math.ceil(total / pageSize),
-      data,
-    };
-
-    return res.status(200).json(new ApiResponse(200, response, 'Get blog successfully'));
-  } catch (error: any) {
-    console.error('Get blogs error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error',
-      data: null,
-    });
-  }
+  return res.status(200).json(
+    new ApiResponse(200, result, 'Blogs fetched successfully')
+  );
 });
 
+/**
+ * @desc    Get single blog by ID or slug
+ * @route   GET /api/blogs/:id
+ * @access  Public
+ */
 const getBlogById = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const data = await blogSchema.findById(req.params.id);
+  const { id } = req.params;
 
-    if (!data) {
-      throw new ApiError(404, 'Blog not found');
-    }
-
-    return res.status(200).json(new ApiResponse(200, data, 'Blog fetched successfully'));
-  } catch (error: any) {
-    console.error('Get blog error:', error);
-
-    if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-        errors: error.errors || [],
-        data: null,
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error',
-      data: null,
-    });
+  if (!id) {
+    throw new ApiError(400, 'Blog ID or slug is required');
   }
+
+  const blog = await blogService.findBlogById(id);
+
+  // Increment views (optional)
+  await blogSchema.findByIdAndUpdate(blog._id, { $inc: { views: 1 } });
+
+  return res.status(200).json(
+    new ApiResponse(200, blog, 'Blog fetched successfully')
+  );
 });
+
+/**
+ * @desc    Create new blog
+ * @route   POST /api/blogs
+ * @access  Private/Admin
+ */
 
 const createBlog = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    console.log('Request body:', req.body);
-    console.log('Uploaded files:', req.files);
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
-    if (!files?.image || files.image.length === 0) {
-      throw new ApiError(400, 'Blog image file is required');
-    }
-
-    const validatedData = createNewsSchema.parse(req.body);
-    const { title, description, author, category, readTime, badge } = validatedData;
-
-    const imageLocalPath = files.image[0].path;
-    console.log('Image local path:', imageLocalPath);
-
-    const imageUrl = await uploadOnCloudinary(imageLocalPath);
-
-    if (!imageUrl) {
-      throw new ApiError(400, 'Blog image upload failed');
-    }
-
-    const data = await blogSchema.create({
-      title,
-      description,
-      category,
-      badge,
-      readTime,
-      author,
-      image: imageUrl,
-    });
-
-    return res.status(201).json(new ApiResponse(201, data, 'Blog created successfully'));
-  } catch (error: any) {
-    if (error.name === 'ZodError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation error',
-        errors: error.errors,
-        data: null,
-      });
-    }
-
-    console.error('Blog create error:', error);
-
-    if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-        errors: error.errors || [],
-        data: null,
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error',
-      data: null,
-    });
+  if (!files?.image || files.image.length === 0) {
+    throw new ApiError(400, 'Blog image file is required');
   }
+
+  // This will now validate against the correct enum values
+  const validatedData = createBlogSchema.parse(req.body);
+
+  const imageLocalPath = files.image[0].path;
+  const imageUrl = await uploadOnCloudinary(imageLocalPath);
+
+  if (!imageUrl) {
+    throw new ApiError(400, 'Blog image upload failed');
+  }
+
+  const data = await blogSchema.create({
+    ...validatedData,
+    image: imageUrl,
+  });
+
+  return res.status(201).json(new ApiResponse(201, data, 'Blog created successfully'));
 });
 
+/**
+ * @desc    Delete blog
+ * @route   DELETE /api/blogs/:id
+ * @access  Private/Admin
+ */
 const deleteBlog = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    const blog = await blogSchema.findById(id);
-
-    if (!blog) {
-      throw new ApiError(404, 'Blog not found');
-    }
-
-    // Delete from Cloudinary if public_id exists
-    // if (blog.image?.public_id) {
-    //     await deleteFromCloudinary(blog.image.public_id);
-    // }
-
-    await blogSchema.findByIdAndDelete(id);
-
-    return res.status(200).json(new ApiResponse(200, null, 'Blog deleted successfully'));
-  } catch (error: any) {
-    console.error('Blog delete error:', error);
-
-    if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-        errors: error.errors || [],
-        data: null,
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error',
-      data: null,
-    });
+  if (!id) {
+    throw new ApiError(400, 'Blog ID is required');
   }
+
+  // Get blog first to access Cloudinary public_id
+  const blog = await blogSchema.findById(id);
+  if (!blog) {
+    throw new ApiError(404, 'Blog not found');
+  }
+
+  // Delete image from Cloudinary
+  // if (blog.image?.public_id) {
+  //   try {
+  //     await deleteFromCloudinary(blog.image.public_id);
+  //   } catch (error) {
+  //     console.error('Failed to delete image from Cloudinary:', error);
+  //   }
+  // }
+
+  // Delete blog from database
+  await blogService.deleteBlogById(id);
+
+  return res.status(200).json(
+    new ApiResponse(200, null, 'Blog deleted successfully')
+  );
 });
 
-export { createBlog, getAllBlogs, getBlogById, deleteBlog };
+/**
+ * @desc    Update blog
+ * @route   PUT /api/blogs/:id
+ * @access  Private/Admin
+ */
+const updateBlog = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const updateData = req.body;
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+  if (files?.image && files.image.length > 0) {
+    const imageLocalPath = files.image[0].path;
+    const cloudinaryResult = await uploadOnCloudinary(imageLocalPath);
+
+    if (!cloudinaryResult) {
+      throw new ApiError(500, 'Failed to upload blog image');
+    }
+
+    updateData.image = cloudinaryResult;
+  }
+
+  const updatedBlog = await blogService.updateBlog(id, updateData);
+
+  return res.status(200).json(
+    new ApiResponse(200, updatedBlog, 'Blog updated successfully')
+  );
+});
+
+/**
+ * @desc    Get blogs by category
+ * @route   GET /api/blogs/categories/:category
+ * @access  Public
+ */
+const getBlogsByCategory = asyncHandler(async (req: Request, res: Response) => {
+  const { category } = req.params;
+  const query = { ...req.query, category } as BlogQueryInput;
+
+  const result = await blogService.findBlogs(query);
+
+  return res.status(200).json(
+    new ApiResponse(200, result, `Blogs in ${category} category fetched successfully`)
+  );
+});
+
+/**
+ * @desc    Get blog statistics
+ * @route   GET /api/blogs/stats/overview
+ * @access  Private/Admin
+ */
+const getBlogStats = asyncHandler(async (req: Request, res: Response) => {
+  const stats = await blogService.getBlogStats();
+
+  return res.status(200).json(
+    new ApiResponse(200, stats, 'Blog statistics fetched successfully')
+  );
+});
+
+export {
+  getAllBlogs,
+  getBlogById,
+  createBlog,
+  deleteBlog,
+  getBlogStats,
+  updateBlog,
+  getBlogsByCategory
+};
