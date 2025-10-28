@@ -56,7 +56,7 @@ const blogSchema = new Schema<IBlog>(
     badge: {
       type: String,
       enum: {
-        values: ['new', 'trending', 'popular', 'featured', 'recommended', 'advanced', 'beginner', 'exclusive', 'updated', 'limited'],
+        values: ['new', 'trending', 'popular', 'featured', 'recommended'],
         message: 'Invalid badge value',
       },
       default: null,
@@ -88,15 +88,6 @@ const blogSchema = new Schema<IBlog>(
   },
   {
     timestamps: true,
-    toJSON: {
-      transform: function (doc, ret) {
-        ret.id = ret._id;
-        delete ret._id;
-        // delete ret.__v;
-        // delete ret.image.public_id;
-        return ret;
-      },
-    },
   }
 );
 
