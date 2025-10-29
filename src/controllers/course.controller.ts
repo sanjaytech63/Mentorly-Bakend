@@ -112,7 +112,7 @@ export const getCourses = asyncHandler(async (req: Request, res: Response) => {
                 sort.totalHours = sortOrder === 'desc' ? -1 : 1;
                 break;
             default:
-                sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+                sort[sortBy as string] = sortOrder === 'desc' ? -1 : 1;
         }
 
         sort.createdAt = -1;
@@ -659,7 +659,7 @@ export const listCourses = asyncHandler(async (req: Request, res: Response) => {
                 { description: { $regex: search, $options: 'i' } },
                 { instructor: { $regex: search, $options: 'i' } },
                 { category: { $regex: search, $options: 'i' } },
-                { tags: { $in: [new RegExp(search, 'i')] } }
+                { tags: { $in: [new RegExp(search as string, 'i')] } }
             ];
         }
 
@@ -829,7 +829,7 @@ export const listCourses = asyncHandler(async (req: Request, res: Response) => {
                 sort.students = -1;
                 break;
             default:
-                sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+                sort[sortBy as string] = sortOrder === 'desc' ? -1 : 1;
         }
 
         // Always include createdAt for consistent ordering
