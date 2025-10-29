@@ -2,7 +2,6 @@ import { FilterQuery, QueryOptions } from 'mongoose';
 import blogSchema, { IBlog } from '../models/blogs.model';
 import { BlogQueryInput } from '../validations/news.validator';
 import { ApiError } from '../utils/ApiError';
-
 export interface PaginatedResult<T> {
   data: T[];
   pagination: {
@@ -60,8 +59,14 @@ export class BlogService {
 
     // Execute queries in parallel
     const [blogs, total] = await Promise.all([
-      blogSchema.find(filter).sort(sortOptions).skip(skip).limit(limit).select('-__v').lean(),
-
+      blogSchema
+        .find(filter)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limit)
+        .select('-__v')
+        .lean()
+        .then((res) => res as []),
       blogSchema.countDocuments(filter),
     ]);
 

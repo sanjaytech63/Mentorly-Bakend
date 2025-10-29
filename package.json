@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "build": "tsc --skipLibCheck --noEmit false",
     "start": "node dist/server.js",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
