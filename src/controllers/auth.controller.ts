@@ -9,6 +9,8 @@ import { ApiError } from '../utils/ApiError';
 
 interface AuthenticatedRequest extends Request {
   user?: any;
+  file?: Express.Multer.File;
+  files?: { [fieldname: string]: Express.Multer.File[] };
 }
 
 const generateAccessAndRefereshTokens = async (userId: string) => {

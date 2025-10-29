@@ -1,4 +1,4 @@
-export class ApiError extends Error {
+class ApiError extends Error {
   statusCode: number;
   data: any;
   success: boolean;
@@ -6,9 +6,9 @@ export class ApiError extends Error {
 
   constructor(
     statusCode: number,
-    message = 'Something went wrong',
+    message: string = "Something went wrong",
     errors: any[] = [],
-    stack = ''
+    stack: string = ""
   ) {
     super(message);
     this.statusCode = statusCode;
@@ -17,10 +17,13 @@ export class ApiError extends Error {
     this.success = false;
     this.errors = errors;
 
-    if (stack) {
-      this.stack = stack;
-    } else {
+    // Fix for captureStackTrace
+    if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, this.constructor);
+    } else {
+      this.stack = stack || new Error().stack;
     }
   }
 }
+
+export { ApiError };
