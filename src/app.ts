@@ -1,8 +1,8 @@
-import express, { Application } from 'express';
+import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
-const app: Application = express();
+const app: express.Application = express();
 
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173'];
 
@@ -27,8 +27,8 @@ import blogRoutes from './routes/blogs.route';
 import subscribeRoutes from './routes/subscribe.routes';
 import videoRoutes from './routes/course.routes';
 
-// Route declractions
-app.use('/api/v1/subscribe', subscribeRoutes)
+// Route declarations
+app.use('/api/v1/subscribe', subscribeRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/blogs', blogRoutes);
 app.use('/api/v1/courses', videoRoutes);

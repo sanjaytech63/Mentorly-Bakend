@@ -8,7 +8,7 @@ export interface IBlog extends Document {
   category: BlogCategory;
   readTime: string;
   badge?: BlogBadge;
-  image: string
+  image: string;
   slug: string;
   tags: string[];
   isPublished: boolean;
@@ -44,8 +44,18 @@ const blogSchema = new Schema<IBlog>(
       type: String,
       required: [true, 'Category is required'],
       enum: {
-        values: ['frontend', 'backend', 'fullstack', 'webdesign', 'mobile', 'devops', 'cybersecurity', 'testing'],
-        message: 'Category must be one of: frontend, backend, fullstack, webdesign, mobile, devops, cybersecurity, testing',
+        values: [
+          'frontend',
+          'backend',
+          'fullstack',
+          'webdesign',
+          'mobile',
+          'devops',
+          'cybersecurity',
+          'testing',
+        ],
+        message:
+          'Category must be one of: frontend, backend, fullstack, webdesign, mobile, devops, cybersecurity, testing',
       },
       index: true,
     },
@@ -71,10 +81,12 @@ const blogSchema = new Schema<IBlog>(
       lowercase: true,
       index: true,
     },
-    tags: [{
-      type: String,
-      trim: true,
-    }],
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     isPublished: {
       type: Boolean,
       default: true,

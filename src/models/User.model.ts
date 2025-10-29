@@ -41,7 +41,7 @@ const userSchema = new Schema<IUser>(
     },
     role: {
       type: String,
-      required: true
+      required: true,
     },
     status: {
       type: String,
@@ -51,8 +51,8 @@ const userSchema = new Schema<IUser>(
     },
     joinDate: {
       type: Date,
-      default: Date.now
-    }
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
@@ -73,7 +73,7 @@ userSchema.methods.generateAccessToken = function () {
     _id: this._id,
     fullName: this.fullName,
     email: this.email,
-    role: "user",
+    role: 'user',
   };
 
   const options: SignOptions = {

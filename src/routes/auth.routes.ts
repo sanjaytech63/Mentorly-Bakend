@@ -30,8 +30,6 @@ router.route('/change-password').post(verifyJWT, changeCurrentPassword);
 router.route('/update-accound-details').patch(verifyJWT, updateAccountDetails);
 router.route('/update-avatar').patch(verifyJWT, upload.single('avatar'), updateUserAvatar);
 router.route('/create-user').post(verifyJWT, createUser);
-router.route('/users/:userId')
-  .patch(verifyJWT, updateUserById)
-  .delete(verifyJWT, deleteUserById);
+router.route('/users/:userId').patch(verifyJWT, updateUserById).delete(verifyJWT, deleteUserById);
 
 export default router;

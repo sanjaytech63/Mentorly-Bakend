@@ -19,9 +19,7 @@ const getAllBlogs = asyncHandler(async (req: Request, res: Response) => {
   // Get blogs with pagination
   const result = await blogService.findBlogs(validatedQuery);
 
-  return res.status(200).json(
-    new ApiResponse(200, result, 'Blogs fetched successfully')
-  );
+  return res.status(200).json(new ApiResponse(200, result, 'Blogs fetched successfully'));
 });
 
 /**
@@ -41,9 +39,7 @@ const getBlogById = asyncHandler(async (req: Request, res: Response) => {
   // Increment views (optional)
   await blogSchema.findByIdAndUpdate(blog._id, { $inc: { views: 1 } });
 
-  return res.status(200).json(
-    new ApiResponse(200, blog, 'Blog fetched successfully')
-  );
+  return res.status(200).json(new ApiResponse(200, blog, 'Blog fetched successfully'));
 });
 
 /**
@@ -107,9 +103,7 @@ const deleteBlog = asyncHandler(async (req: Request, res: Response) => {
   // Delete blog from database
   await blogService.deleteBlogById(id);
 
-  return res.status(200).json(
-    new ApiResponse(200, null, 'Blog deleted successfully')
-  );
+  return res.status(200).json(new ApiResponse(200, null, 'Blog deleted successfully'));
 });
 
 /**
@@ -135,9 +129,7 @@ const updateBlog = asyncHandler(async (req: Request, res: Response) => {
 
   const updatedBlog = await blogService.updateBlog(id, updateData);
 
-  return res.status(200).json(
-    new ApiResponse(200, updatedBlog, 'Blog updated successfully')
-  );
+  return res.status(200).json(new ApiResponse(200, updatedBlog, 'Blog updated successfully'));
 });
 
 /**
@@ -151,9 +143,9 @@ const getBlogsByCategory = asyncHandler(async (req: Request, res: Response) => {
 
   const result = await blogService.findBlogs(query);
 
-  return res.status(200).json(
-    new ApiResponse(200, result, `Blogs in ${category} category fetched successfully`)
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, `Blogs in ${category} category fetched successfully`));
 });
 
 /**
@@ -164,9 +156,7 @@ const getBlogsByCategory = asyncHandler(async (req: Request, res: Response) => {
 const getBlogStats = asyncHandler(async (req: Request, res: Response) => {
   const stats = await blogService.getBlogStats();
 
-  return res.status(200).json(
-    new ApiResponse(200, stats, 'Blog statistics fetched successfully')
-  );
+  return res.status(200).json(new ApiResponse(200, stats, 'Blog statistics fetched successfully'));
 });
 
 export {
@@ -176,5 +166,5 @@ export {
   deleteBlog,
   getBlogStats,
   updateBlog,
-  getBlogsByCategory
+  getBlogsByCategory,
 };

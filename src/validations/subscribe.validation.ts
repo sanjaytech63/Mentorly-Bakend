@@ -1,5 +1,5 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const subscribeSchema = z.object({
-    email: z.string().email("Invalid email address"),
+  email: z.string().email('Invalid email address'),
 });

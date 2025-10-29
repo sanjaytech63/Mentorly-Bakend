@@ -6,7 +6,7 @@ import {
   getBlogById,
   updateBlog,
   getBlogStats,
-  getBlogsByCategory
+  getBlogsByCategory,
 } from '../controllers/blogs.controller';
 import { upload } from '../middlewares/multer.middleware';
 // import { verifyJWT } from '../middlewares/auth.middleware';
@@ -14,23 +14,14 @@ import { upload } from '../middlewares/multer.middleware';
 const router = Router();
 
 // Public routes
-router.get(
-  '/',
-  getAllBlogs
-);
+router.get('/', getAllBlogs);
 
-router.get(
-  '/categories/:category',
-  getBlogsByCategory
-);
+router.get('/categories/:category', getBlogsByCategory);
 
 // Protected routes (Authentication required)
 // router.use(verifyJWT);
 
-router.get(
-  '/:id',
-  getBlogById
-);
+router.get('/:id', getBlogById);
 
 // Admin only routes
 

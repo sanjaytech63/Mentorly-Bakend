@@ -190,7 +190,10 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
-    const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET!) as JwtPayload;
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET!
+    ) as JwtPayload;
 
     const user = await User.findById(decodedToken._id);
 
@@ -257,7 +260,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
     const searchString = String(search);
     query.$or = [
       { name: { $regex: searchString, $options: 'i' } },
-      { email: { $regex: searchString, $options: 'i' } }
+      { email: { $regex: searchString, $options: 'i' } },
     ];
   }
 
@@ -274,16 +277,20 @@ const getAllUsers = asyncHandler(async (req, res) => {
   const total = await User.countDocuments(query);
 
   return res.status(200).json(
-    new ApiResponse(200, {
-      users,
-      pagination: {
-        currentPage: pageNum,
-        totalPages: Math.ceil(total / limitNum),
-        totalUsers: total,
-        hasNext: pageNum * limitNum < total,
-        hasPrev: pageNum > 1
-      }
-    }, "Users retrieved successfully")
+    new ApiResponse(
+      200,
+      {
+        users,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(total / limitNum),
+          totalUsers: total,
+          hasNext: pageNum * limitNum < total,
+          hasPrev: pageNum > 1,
+        },
+      },
+      'Users retrieved successfully'
+    )
   );
 });
 
@@ -333,8 +340,6 @@ const updateUserAvatar = asyncHandler(async (req: AuthenticatedRequest, res) => 
   return res.status(200).json(new ApiResponse(200, user, 'Avatar image updated successfully'));
 });
 
-
-
 const createUser = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { fullName, email, password } = req.body;
@@ -354,14 +359,14 @@ const createUser = asyncHandler(async (req: Request, res: Response) => {
       password,
       role: 'user',
       status: 'active',
-      avatar: 'https://via.placeholder.com/150'
+      avatar: 'https://via.placeholder.com/150',
     });
 
     const userWithoutPassword = await User.findById(newUser._id).select('-password');
 
-    return res.status(201).json(
-      new ApiResponse(201, userWithoutPassword, 'User created successfully')
-    );
+    return res
+      .status(201)
+      .json(new ApiResponse(201, userWithoutPassword, 'User created successfully'));
   } catch (error: any) {
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
@@ -391,7 +396,7 @@ const updateUserById = asyncHandler(async (req: Request, res: Response) => {
 
     const existingUser = await User.findOne({
       email,
-      _id: { $ne: userId }
+      _id: { $ne: userId },
     });
 
     if (existingUser) {
@@ -408,9 +413,7 @@ const updateUserById = asyncHandler(async (req: Request, res: Response) => {
       throw new ApiError(404, 'User not found');
     }
 
-    return res.status(200).json(
-      new ApiResponse(200, user, 'User updated successfully')
-    );
+    return res.status(200).json(new ApiResponse(200, user, 'User updated successfully'));
   } catch (error: any) {
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
@@ -443,9 +446,7 @@ const deleteUserById = asyncHandler(async (req: Request, res: Response) => {
       throw new ApiError(404, 'User not found');
     }
 
-    return res.status(200).json(
-      new ApiResponse(200, null, 'User deleted successfully')
-    );
+    return res.status(200).json(new ApiResponse(200, null, 'User deleted successfully'));
   } catch (error: any) {
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
@@ -476,5 +477,5 @@ export {
   getAllUsers,
   createUser,
   deleteUserById,
-  updateUserById
+  updateUserById,
 };

@@ -21,15 +21,15 @@ export const createCourseSchema = z.object({
     isFeatured: z.boolean().default(false),
     isActive: z.boolean().default(true),
     totalHours: z.number().min(0).default(0),
-    lectures: z.number().min(0).default(0)
-  })
+    lectures: z.number().min(0).default(0),
+  }),
 });
 
 export const updateCourseSchema = z.object({
   params: z.object({
-    id: z.string().min(1, 'Course ID is required')
+    id: z.string().min(1, 'Course ID is required'),
   }),
-  body: createCourseSchema.shape.body.partial()
+  body: createCourseSchema.shape.body.partial(),
 });
 
 export const getCoursesSchema = z.object({
@@ -43,7 +43,10 @@ export const getCoursesSchema = z.object({
     // Price filters
     minPrice: z.string().transform(Number).pipe(z.number().min(0)).optional(),
     maxPrice: z.string().transform(Number).pipe(z.number().min(0)).optional(),
-    hasDiscount: z.string().transform(val => val === 'true').optional(),
+    hasDiscount: z
+      .string()
+      .transform(val => val === 'true')
+      .optional(),
     minDiscount: z.string().transform(Number).pipe(z.number().min(0).max(100)).optional(),
 
     // Rating filters
@@ -54,8 +57,15 @@ export const getCoursesSchema = z.object({
     level: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
 
     // Featured and status
-    isFeatured: z.string().transform(val => val === 'true').optional(),
-    isActive: z.string().transform(val => val === 'true').optional().default(true),
+    isFeatured: z
+      .string()
+      .transform(val => val === 'true')
+      .optional(),
+    isActive: z
+      .string()
+      .transform(val => val === 'true')
+      .optional()
+      .default(true),
 
     // Duration filters
     minDuration: z.string().transform(Number).pipe(z.number().min(0)).optional(),
@@ -69,24 +79,36 @@ export const getCoursesSchema = z.object({
     limit: z.string().transform(Number).pipe(z.number().min(1).max(100)).default(10),
 
     // Sorting
-    sortBy: z.enum([
-      'title', 'rating', 'reviewCount', 'originalPrice',
-      'discountedPrice', 'students', 'createdAt', 'duration'
-    ]).default('createdAt'),
-    sortOrder: z.enum(['asc', 'desc']).default('desc')
-  })
+    sortBy: z
+      .enum([
+        'title',
+        'rating',
+        'reviewCount',
+        'originalPrice',
+        'discountedPrice',
+        'students',
+        'createdAt',
+        'duration',
+      ])
+      .default('createdAt'),
+    sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  }),
 });
 
 export const getCourseSchema = z.object({
   params: z.object({
-    id: z.string().min(1, 'Course ID is required')
-  })
+    id: z.string().min(1, 'Course ID is required'),
+  }),
 });
 
 export const getCategoriesSchema = z.object({
   query: z.object({
-    includeCount: z.string().transform(val => val === 'true').optional().default(false)
-  })
+    includeCount: z
+      .string()
+      .transform(val => val === 'true')
+      .optional()
+      .default(false),
+  }),
 });
 
 export type CreateCourseInput = z.infer<typeof createCourseSchema>['body'];
