@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: backend
+    env: node
+    plan: free
+    region: singapore   # or 'oregon', 'frankfurt', etc.
+
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: MONGO_URI
+        sync: false

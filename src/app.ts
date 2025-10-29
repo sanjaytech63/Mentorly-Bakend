@@ -1,8 +1,8 @@
-import express from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
-const app: express.Application = express();
+const app: Application = express();
 
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173'];
 
