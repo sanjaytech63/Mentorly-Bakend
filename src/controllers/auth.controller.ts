@@ -3,9 +3,13 @@ import User from '../models/user.model';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { loginUserSchema, registerUserSchema } from '../validations/userValidation';
 import { asyncHandler } from '../utils/asyncHandler';
-import { ApiError } from '../utils/ApiError';
 import { ApiResponse } from '../utils/ApiResponse';
 import { uploadOnCloudinary } from '../utils/Cloudinary';
+import { ApiError } from '../utils/ApiError';
+
+interface AuthenticatedRequest extends Request {
+  user?: any;
+}
 
 const generateAccessAndRefereshTokens = async (userId: string) => {
   try {
@@ -28,9 +32,6 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const { fullName, email, password } = validatedData;
 
     const avatarLocalPath = req.file?.path;
-    console.log(req.file);
-
-    console.log(avatarLocalPath, 'avatar in register');
 
     if (!avatarLocalPath) {
       throw new ApiError(400, 'Avatar file is required');
@@ -154,7 +155,7 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-const logoutUser = asyncHandler(async (req: any, res) => {
+const logoutUser = asyncHandler(async (req: AuthenticatedRequest, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
@@ -179,7 +180,7 @@ const logoutUser = asyncHandler(async (req: any, res) => {
     .json(new ApiResponse(200, {}, 'User logged Out'));
 });
 
-const refreshAccessToken = asyncHandler(async (req, res) => {
+const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
   const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
@@ -187,9 +188,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 
   try {
-    const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET!);
+    const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET!) as JwtPayload;
 
-    const user = await User.findById((decodedToken as JwtPayload)._id as string);
+    const user = await User.findById(decodedToken._id);
 
     if (!user) {
       throw new ApiError(401, 'Invalid refresh token');
@@ -218,7 +219,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const changeCurrentPassword = asyncHandler(async (req, res) => {
+const changeCurrentPassword = asyncHandler(async (req: AuthenticatedRequest, res) => {
   const { oldPassword, newPassword } = req.body;
 
   const user: any = await User.findById(req.user?._id);
@@ -234,7 +235,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, {}, 'Password changed successfully'));
 });
 
-const getCurrentUser = asyncHandler(async (req, res) => {
+const getCurrentUser = asyncHandler(async (req: AuthenticatedRequest, res) => {
   return res.status(200).json(new ApiResponse(200, req.user, 'User fetched successfully'));
 });
 
@@ -284,7 +285,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
   );
 });
 
-const updateAccountDetails = asyncHandler(async function (req, res) {
+const updateAccountDetails = asyncHandler(async function (req: AuthenticatedRequest, res) {
   const { fullName, email } = req.body;
 
   if (!fullName && !email) {
@@ -304,7 +305,7 @@ const updateAccountDetails = asyncHandler(async function (req, res) {
   return res.status(201).json(new ApiResponse(200, user, 'Account details updated successfully'));
 });
 
-const updateUserAvatar = asyncHandler(async (req, res) => {
+const updateUserAvatar = asyncHandler(async (req: AuthenticatedRequest, res) => {
   const avatarLocalPath = req.file?.path;
 
   if (!avatarLocalPath) {
