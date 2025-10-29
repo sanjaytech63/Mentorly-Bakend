@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "dev": "ts-node-dev --respawn server.ts",
+    "start": "node dist/server.js",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
