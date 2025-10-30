@@ -2,10 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "lib": [
-      "ES2020",
-      "dom"
-    ],
+    "lib": ["ES2020", "dom"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": false,
@@ -14,30 +11,10 @@
     "resolveJsonModule": true,
     "declaration": false,
     "noImplicitAny": false,
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"
-    ],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "noEmitOnError": false,
     "skipLibCheck": true,
-    "baseUrl": "./src",
-    "paths": {
-      "@models/*": [
-        "models/*"
-      ],
-      "@controllers/*": [
-        "controllers/*"
-      ],
-      "@middlewares/*": [
-        "middlewares/*"
-      ]
-    }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
