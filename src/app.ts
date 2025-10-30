@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 
 const app: Application = express();
 
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173'];
+const allowedOrigins = ['https://mentorly-app.vercel.app', 'https://mentorly-admin.vercel.app'];
 
 app.use(
   cors({
