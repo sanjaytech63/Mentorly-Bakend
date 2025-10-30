@@ -26,9 +26,11 @@ import authRoutes from './routes/auth.routes';
 import blogRoutes from './routes/blogs.route';
 import subscribeRoutes from './routes/subscribe.routes';
 import videoRoutes from './routes/course.routes';
+import contactRoutes from './routes/contact.routes';
 
 // Route declarations
 app.use('/api/v1/subscribe', subscribeRoutes);
+app.use('/api/v1/contact', contactRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/blogs', blogRoutes);
 app.use('/api/v1/courses', videoRoutes);
