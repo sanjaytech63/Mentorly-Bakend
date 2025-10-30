@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import User from '../models/user.model';
+import User from '../models/user.models';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { loginUserSchema, registerUserSchema } from '../validations/userValidation';
 import { asyncHandler } from '../utils/asyncHandler';

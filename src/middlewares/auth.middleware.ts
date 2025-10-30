@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../utils/ApiError';
 import { asyncHandler } from '../utils/asyncHandler';
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import User from '../models/user.model';
+import User from '../models/user.models';
 
 export interface AuthenticatedRequest extends Request {
   user?: any; 
